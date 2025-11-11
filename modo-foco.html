@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FocusFlow - Modo Foco</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --azul-pro: #1e40af;
+            --laranja: #f97316;
+            --bg: #ffffff;
+            --text: #1f2937;
+            --card-bg: rgba(255, 255, 255, 0.7);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        body.focus-active {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--azul-pro);
+            text-decoration: none;
+        }
+
+        .logo span {
+            color: var(--laranja);
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-menu a {
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-menu a:hover, .nav-menu a.active {
+            color: var(--laranja);
+        }
+
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        .hamburger span {
+            width: 25px;
+            height: 3px;
+            background: var(--azul-pro);
+            transition: 0.3s;
+        }
+
+        .container {
+            margin-top: 100px;
+            padding: 2rem 5%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .page-header {
+            text-align: center;
+            color: white;
+            margin-bottom: 3rem;
+        }
+
+        .page-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .timer-section {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            padding: 3rem;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            margin-bottom: 2rem;
+        }
+
+        body.focus-active .timer-section {
+            background: rgba(30, 41, 59, 0.8);
+            color: white;
+        }
+
+        .timer-display {
+            font-size: 5rem;
+            font-weight: 700;
+            color: var(--azul-pro);
+            margin: 2rem 0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        body.focus-active .timer-display {
+            color: var(--laranja);
+        }
+
+        .timer-label {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            opacity: 0.8;
+        }
+
+        .timer-controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .control-btn {
+            padding: 1rem 2.5rem;
+            border: none;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .start-btn {
+            background: var(--laranja);
+            color: white;
+        }
+
+        .pause-btn {
+            background: #fbbf24;
+            color: white;
+        }
+
+        .reset-btn {
+            background: #6b7280;
+            color: white;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-3px);
+        }
+
+        .presets {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .preset-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid transparent;
+            padding: 1.5rem;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        body.focus-active .preset-btn {
+            background: rgba(30, 41, 59, 0.6);
+            color: white;
+        }
+
+        .preset-btn:hover, .preset-btn.active {
+            border-color: var(--laranja);
+            transform: translateY(-3px);
+        }
+
+        .preset-time {
+            font-size: 1.5rem;
+            color: var(--azul-pro);
+            margin-bottom: 0.5rem;
+        }
+
+        body.focus-active .preset-time {
+            color: var(--laranja);
+        }
+
+        .focus-status {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            text-align: center;
+        }
+
+        body.focus-active .focus-status {
+            background: rgba(30, 41, 59, 0.8);
+            color: white;
+        }
+
+        .status-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .status-text {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--azul-pro);
+        }
+
+        body.focus-active .status-text {
+            color: var(--laranja);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 1rem;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        body.focus-active .stat-card {
+            background: rgba(30, 41, 59, 0.4);
+            color: white;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--laranja);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        footer {
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 4rem;
+        }
+
+        @media (max-width: 768px) {
+            .nav-menu {
+                position: fixed;
+                top: 70px;
+                right: -100%;
+                flex-direction: column;
+                background: rgba(255, 255, 255, 0.98);
+                width: 100%;
+                padding: 2rem;
+                transition: right 0.3s;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            }
+
+            .nav-menu.active {
+                right: 0;
+            }
+
+            .hamburger {
+                display: flex;
+            }
+
+            .page-header h1 {
+                font-size: 2rem;
+            }
+
+            .timer-display {
+                font-size: 3.5rem;
+            }
+
+            .timer-controls {
+                flex-direction: column;
+            }
+
+            .control-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html" class="logo">Focus<span>Flow</span></a>
+        <ul class="nav-menu" id="navMenu">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="modo-foco.html" class="active">Modo Foco</a></li>
+            <li><a href="tarefas.html">Tarefas</a></li>
+            <li><a href="pausas.html">Pausas</a></li>
+            <li><a href="desconexao.html">Desconexão</a></li>
+        </ul>
+        <div class="hamburger" id="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <h1>📱 Modo Foco</h1>
+            <p>Timer Pomodoro com bloqueio inteligente de distrações</p>
+        </div>
+
+        <div class="presets">
+            <button class="preset-btn active" data-minutes="25">
+                <div class="preset-time">25min</div>
+                <div>Pomodoro</div>
+            </button>
+            <button class="preset-btn" data-minutes="15">
+                <div class="preset-time">15min</div>
+                <div>Foco Rápido</div>
+            </button>
+            <button class="preset-btn" data-minutes="45">
+                <div class="preset-time">45min</div>
+                <div>Deep Work</div>
+            </button>
+        </div>
+
+        <div class="timer-section">
+            <div class="timer-label">Tempo de Foco</div>
+            <div class="timer-display" id="timerDisplay">25:00</div>
+            <div class="timer-controls">
+                <button class="control-btn start-btn" id="startBtn">Iniciar</button>
+                <button class="control-btn pause-btn" id="pauseBtn" style="display: none;">Pausar</button>
+                <button class="control-btn reset-btn" id="resetBtn">Resetar</button>
+            </div>
+        </div>
+
+        <div class="focus-status">
+            <div class="status-icon" id="statusIcon">🎯</div>
+            <div class="status-text" id="statusText">Pronto para focar</div>
+            
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="sessionsToday">0</div>
+                    <div class="stat-label">Sessões Hoje</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalMinutes">0</div>
+                    <div class="stat-label">Minutos Total</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="streak">0</div>
+                    <div class="stat-label">Sequência</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 FocusFlow. Equilíbrio é produtividade.</p>
+    </footer>
+
+    <script>
+        const hamburger = document.getElementById('hamburger');
+        const navMenu = document.getElementById('navMenu');
+
+        hamburger.addEventListener('click', () => {
+            navMenu.classList.toggle('active');
+        });
+
+        document.querySelectorAll('.nav-menu a').forEach(link => {
+            link.addEventListener('click', () => {
+                navMenu.classList.remove('active');
+            });
+        });
+
+        let timeLeft = 25 * 60;
+        let totalTime = 25 * 60;
+        let timerInterval = null;
+        let isRunning = false;
+
+        const timerDisplay = document.getElementById('timerDisplay');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const statusIcon = document.getElementById('statusIcon');
+        const statusText = document.getElementById('statusText');
+
+        let stats = JSON.parse(localStorage.getItem('focusflow-stats')) || {
+            sessionsToday: 0,
+            totalMinutes: 0,
+            streak: 0,
+            lastDate: new Date().toDateString()
+        };
+
+        if (stats.lastDate !== new Date().toDateString()) {
+            stats.sessionsToday = 0;
+            stats.lastDate = new Date().toDateString();
+        }
+
+        function updateStats() {
+            document.getElementById('sessionsToday').textContent = stats.sessionsToday;
+            document.getElementById('totalMinutes').textContent = stats.totalMinutes;
+            document.getElementById('streak').textContent = stats.streak;
+        }
+
+        function saveStats() {
+            localStorage.setItem('focusflow-stats', JSON.stringify(stats));
+        }
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function updateDisplay() {
+            timerDisplay.textContent = formatTime(timeLeft);
+        }
+
+        function startTimer() {
+            if (!isRunning) {
+                isRunning = true;
+                document.body.classList.add('focus-active');
+                statusIcon.textContent = '🔥';
+                statusText.textContent = 'Modo Foco Ativado!';
+                startBtn.style.display = 'none';
+                pauseBtn.style.display = 'inline-block';
+
+                timerInterval = setInterval(() => {
+                    timeLeft--;
+                    updateDisplay();
+
+                    if (timeLeft <= 0) {
+                        completeSession();
+                    }
+                }, 1000);
+            }
+        }
+
+        function pauseTimer() {
+            isRunning = false;
+            clearInterval(timerInterval);
+            document.body.classList.remove('focus-active');
+            statusIcon.textContent = '⏸️';
+            statusText.textContent = 'Timer pausado';
+            startBtn.style.display = 'inline-block';
+            pauseBtn.style.display = 'none';
+        }
+
+        function resetTimer() {
+            pauseTimer();
+            timeLeft = totalTime;
+            updateDisplay();
+            statusIcon.textContent = '🎯';
+            statusText.textContent = 'Pronto para focar';
+        }
+
+        function completeSession() {
+            pauseTimer();
+            stats.sessionsToday++;
+            stats.totalMinutes += Math.floor(totalTime / 60);
+            stats.streak++;
+            saveStats();
+            updateStats();
+
+            statusIcon.textContent = '✅';
+            statusText.textContent = 'Sessão completa! Ótimo trabalho!';
+            
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification('FocusFlow', {
+                    body: 'Sessão de foco concluída! Hora de uma pausa.',
+                    icon: '🎯'
+                });
+            }
+
+            timeLeft = totalTime;
+            updateDisplay();
+        }
+
+        startBtn.addEventListener('click', startTimer);
+        pauseBtn.addEventListener('click', pauseTimer);
+        resetBtn.addEventListener('click', resetTimer);
+
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                if (isRunning) return;
+
+                document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                const minutes = parseInt(btn.dataset.minutes);
+                totalTime = minutes * 60;
+                timeLeft = totalTime;
+                updateDisplay();
+            });
+        });
+
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+
+        updateDisplay();
+        updateStats();
+    </script>
+</body>
+</html>
