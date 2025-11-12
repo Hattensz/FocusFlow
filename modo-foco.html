@@ -27,6 +27,10 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: var(--text);
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: stretch;
         }
 
         body.focus-active {
@@ -333,7 +337,7 @@
             <li><a href="modo-foco.html" class="active">Modo Foco</a></li>
             <li><a href="tarefas.html">Tarefas</a></li>
             <li><a href="pausas.html">Pausas</a></li>
-            <li><a href="desconexao.html">Desconexão</a></li>
+            <li><a href="configuracao.html">Configuração</a></li>
         </ul>
         <div class="hamburger" id="hamburger">
             <span></span>
@@ -399,6 +403,7 @@
     </footer>
 
     <script>
+        // Menu hamburger
         const hamburger = document.getElementById('hamburger');
         const navMenu = document.getElementById('navMenu');
 
@@ -412,17 +417,14 @@
             });
         });
 
-        let timeLeft = 25 * 60;
-        let totalTime = 25 * 60;
-        let timerInterval = null;
-        let isRunning = false;
-
-        const timerDisplay = document.getElementById('timerDisplay');
-        const startBtn = document.getElementById('startBtn');
-        const pauseBtn = document.getElementById('pauseBtn');
-        const resetBtn = document.getElementById('resetBtn');
-        const statusIcon = document.getElementById('statusIcon');
-        const statusText = document.getElementById('statusText');
+        // Timer state
+        let timerState = JSON.parse(localStorage.getItem('focusflow-timer')) || {
+            timeLeft: 25 * 60,
+            totalTime: 25 * 60,
+            isRunning: false,
+            selectedPreset: 25,
+            endTime: null
+        };
 
         let stats = JSON.parse(localStorage.getItem('focusflow-stats')) || {
             sessionsToday: 0,
@@ -431,19 +433,34 @@
             lastDate: new Date().toDateString()
         };
 
-        if (stats.lastDate !== new Date().toDateString()) {
-            stats.sessionsToday = 0;
-            stats.lastDate = new Date().toDateString();
-        }
+        let timerInterval = null;
 
-        function updateStats() {
-            document.getElementById('sessionsToday').textContent = stats.sessionsToday;
-            document.getElementById('totalMinutes').textContent = stats.totalMinutes;
-            document.getElementById('streak').textContent = stats.streak;
+        const timerDisplay = document.getElementById('timerDisplay');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const statusIcon = document.getElementById('statusIcon');
+        const statusText = document.getElementById('statusText');
+
+        function saveTimerState() {
+            localStorage.setItem('focusflow-timer', JSON.stringify(timerState));
         }
 
         function saveStats() {
             localStorage.setItem('focusflow-stats', JSON.stringify(stats));
+        }
+
+        // Resetar stats diárias
+        if (stats.lastDate !== new Date().toDateString()) {
+            stats.sessionsToday = 0;
+            stats.lastDate = new Date().toDateString();
+            saveStats();
+        }
+
+        function updateStatsDisplay() {
+            document.getElementById('sessionsToday').textContent = stats.sessionsToday;
+            document.getElementById('totalMinutes').textContent = stats.totalMinutes;
+            document.getElementById('streak').textContent = stats.streak;
         }
 
         function formatTime(seconds) {
@@ -453,32 +470,52 @@
         }
 
         function updateDisplay() {
-            timerDisplay.textContent = formatTime(timeLeft);
+            timerDisplay.textContent = formatTime(timerState.timeLeft);
         }
 
         function startTimer() {
-            if (!isRunning) {
-                isRunning = true;
-                document.body.classList.add('focus-active');
-                statusIcon.textContent = '🔥';
-                statusText.textContent = 'Modo Foco Ativado!';
-                startBtn.style.display = 'none';
-                pauseBtn.style.display = 'inline-block';
+            if (timerInterval) clearInterval(timerInterval);
 
-                timerInterval = setInterval(() => {
-                    timeLeft--;
-                    updateDisplay();
-
-                    if (timeLeft <= 0) {
-                        completeSession();
-                    }
-                }, 1000);
+            if (!timerState.isRunning) {
+                timerState.isRunning = true;
             }
+
+            if (!timerState.endTime) {
+                timerState.endTime = Date.now() + timerState.timeLeft * 1000;
+            }
+
+            saveTimerState();
+
+            document.body.classList.add('focus-active');
+            statusIcon.textContent = '🔥';
+            statusText.textContent = 'Modo Foco Ativado!';
+            startBtn.style.display = 'none';
+            pauseBtn.style.display = 'inline-block';
+
+            timerInterval = setInterval(() => {
+                const remaining = Math.ceil((timerState.endTime - Date.now()) / 1000);
+                timerState.timeLeft = Math.max(0, remaining);
+                saveTimerState();
+                updateDisplay();
+
+                if (remaining <= 0) {
+                    completeSession();
+                }
+            }, 1000);
         }
 
         function pauseTimer() {
-            isRunning = false;
+            if (timerState.endTime) {
+                const remaining = Math.ceil((timerState.endTime - Date.now()) / 1000);
+                timerState.timeLeft = Math.max(0, remaining);
+                timerState.endTime = null;
+            }
+
+            timerState.isRunning = false;
+            saveTimerState();
+
             clearInterval(timerInterval);
+            timerInterval = null;
             document.body.classList.remove('focus-active');
             statusIcon.textContent = '⏸️';
             statusText.textContent = 'Timer pausado';
@@ -488,7 +525,9 @@
 
         function resetTimer() {
             pauseTimer();
-            timeLeft = totalTime;
+            timerState.timeLeft = timerState.totalTime;
+            timerState.endTime = null;
+            saveTimerState();
             updateDisplay();
             statusIcon.textContent = '🎯';
             statusText.textContent = 'Pronto para focar';
@@ -497,10 +536,10 @@
         function completeSession() {
             pauseTimer();
             stats.sessionsToday++;
-            stats.totalMinutes += Math.floor(totalTime / 60);
+            stats.totalMinutes += Math.floor(timerState.totalTime / 60);
             stats.streak++;
             saveStats();
-            updateStats();
+            updateStatsDisplay();
 
             statusIcon.textContent = '✅';
             statusText.textContent = 'Sessão completa! Ótimo trabalho!';
@@ -512,7 +551,8 @@
                 });
             }
 
-            timeLeft = totalTime;
+            timerState.timeLeft = timerState.totalTime;
+            saveTimerState();
             updateDisplay();
         }
 
@@ -521,25 +561,56 @@
         resetBtn.addEventListener('click', resetTimer);
 
         document.querySelectorAll('.preset-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                if (isRunning) return;
+            btn.addEventListener('click', () => {
+                if (timerState.isRunning) return;
 
                 document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
 
                 const minutes = parseInt(btn.dataset.minutes);
-                totalTime = minutes * 60;
-                timeLeft = totalTime;
+                timerState.totalTime = minutes * 60;
+                timerState.timeLeft = minutes * 60;
+                timerState.selectedPreset = minutes;
+                saveTimerState();
                 updateDisplay();
             });
         });
 
+        // Solicitar permissão de notificação
         if ('Notification' in window && Notification.permission === 'default') {
             Notification.requestPermission();
         }
 
-        updateDisplay();
-        updateStats();
+        // Carregar estado ao iniciar
+        function loadState() {
+            // Atualizar preset selecionado
+            document.querySelectorAll('.preset-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (parseInt(btn.dataset.minutes) === timerState.selectedPreset) {
+                    btn.classList.add('active');
+                }
+            });
+
+            updateStatsDisplay();
+
+            if (timerState.isRunning && timerState.endTime) {
+                const remaining = Math.ceil((timerState.endTime - Date.now()) / 1000);
+                if (remaining > 0) {
+                    timerState.timeLeft = remaining;
+                    startTimer();
+                    return;
+                } else {
+                    timerState.endTime = null;
+                    timerState.isRunning = false;
+                    timerState.timeLeft = timerState.totalTime;
+                    saveTimerState();
+                }
+            }
+
+            updateDisplay();
+        }
+
+        loadState();
     </script>
 </body>
 </html>

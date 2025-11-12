@@ -27,6 +27,10 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: var(--text);
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: stretch;
         }
 
         nav {
@@ -186,11 +190,6 @@
 
         .exercise-card:hover {
             transform: translateY(-5px);
-        }
-
-        .exercise-card.active {
-            border: 3px solid var(--laranja);
-            background: rgba(249, 115, 22, 0.1);
         }
 
         .exercise-icon {
@@ -377,7 +376,7 @@
             <li><a href="modo-foco.html">Modo Foco</a></li>
             <li><a href="tarefas.html">Tarefas</a></li>
             <li><a href="pausas.html" class="active">Pausas</a></li>
-            <li><a href="desconexao.html">Desconexão</a></li>
+            <li><a href="configuracao.html">Configuração</a></li>
         </ul>
         <div class="hamburger" id="hamburger">
             <span></span>
@@ -464,7 +463,7 @@
         </div>
 
         <div class="stats-section" style="margin-top: 3rem;">
-            <div class="stats-title">📊 Estatísticas de Produtividade</div>
+            <div class="stats-title">📊 Estatísticas de Pausas</div>
             <div class="stats-grid">
                 <div class="stat-box">
                     <div class="stat-number" id="pausasHoje">0</div>
@@ -490,7 +489,7 @@
         <div class="modal-content">
             <div class="modal-icon" id="modalIcon">⏰</div>
             <div class="modal-title" id="modalTitle">Hora de uma Pausa!</div>
-            <div class="modal-timer" id="modalTimer">5:00</div>
+            <div class="modal-timer" id="modalTimer">05:00</div>
             <div class="modal-description" id="modalDescription">
                 Escolha um exercício acima ou clique para começar uma pausa livre.
             </div>
@@ -518,10 +517,18 @@
         });
 
         // Sistema de pausas
+        let pausaState = JSON.parse(localStorage.getItem('focusflow-pausa-state')) || {
+            active: false,
+            timeLeft: 0,
+            totalTime: 0,
+            exerciseName: '',
+            exerciseIcon: '',
+            exerciseDesc: ''
+        };
+
         let reminderInterval = null;
         let reminderActive = false;
         let exerciseTimer = null;
-        let exerciseTimeLeft = 0;
 
         const toggleBtn = document.getElementById('toggleReminders');
         const intervalSelect = document.getElementById('intervalSelect');
@@ -541,6 +548,11 @@
         if (stats.lastDate !== new Date().toDateString()) {
             stats.pausasHoje = 0;
             stats.lastDate = new Date().toDateString();
+            saveStats();
+        }
+
+        function savePausaState() {
+            localStorage.setItem('focusflow-pausa-state', JSON.stringify(pausaState));
         }
 
         function updateStats() {
@@ -595,40 +607,57 @@
             modal.classList.add('show');
         }
 
-        function startExercise(name, icon, duration, description) {
+        function startExercise(name, icon, durationMin, description) {
+            pausaState.active = true;
+            pausaState.timeLeft = durationMin * 60;
+            pausaState.totalTime = durationMin * 60;
+            pausaState.exerciseName = name;
+            pausaState.exerciseIcon = icon;
+            pausaState.exerciseDesc = description;
+            savePausaState();
+
             modal.classList.add('show');
             document.getElementById('modalIcon').textContent = icon;
             document.getElementById('modalTitle').textContent = name;
             document.getElementById('modalDescription').textContent = description;
             
-            exerciseTimeLeft = duration * 60;
             updateExerciseTimer();
 
+            if (exerciseTimer) clearInterval(exerciseTimer);
             exerciseTimer = setInterval(() => {
-                exerciseTimeLeft--;
+                pausaState.timeLeft--;
+                savePausaState();
                 updateExerciseTimer();
 
-                if (exerciseTimeLeft <= 0) {
-                    completeExercise(duration);
+                if (pausaState.timeLeft <= 0) {
+                    completeExercise();
                 }
             }, 1000);
         }
 
         function updateExerciseTimer() {
-            const mins = Math.floor(exerciseTimeLeft / 60);
-            const secs = exerciseTimeLeft % 60;
+            const mins = Math.floor(pausaState.timeLeft / 60);
+            const secs = pausaState.timeLeft % 60;
             document.getElementById('modalTimer').textContent = 
-                `${mins}:${secs.toString().padStart(2, '0')}`;
+                `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
         }
 
-        function completeExercise(duration) {
+        function completeExercise() {
             clearInterval(exerciseTimer);
+            
+            const completedMinutes = Math.ceil((pausaState.totalTime - pausaState.timeLeft) / 60);
+            
             stats.pausasHoje++;
             stats.pausasTotal++;
-            stats.tempoTotal += duration;
+            stats.tempoTotal += completedMinutes;
             stats.sequencia++;
             saveStats();
             updateStats();
+            
+            pausaState.active = false;
+            pausaState.timeLeft = 0;
+            savePausaState();
+            
             modal.classList.remove('show');
         }
 
@@ -643,12 +672,7 @@
         });
 
         modalClose.addEventListener('click', () => {
-            if (exerciseTimer) {
-                const duration = Math.ceil((300 - exerciseTimeLeft) / 60);
-                completeExercise(duration);
-            } else {
-                modal.classList.remove('show');
-            }
+            completeExercise();
         });
 
         // Exercícios
@@ -669,6 +693,29 @@
             });
         });
 
+        // Restaurar pausa ao recarregar
+        function restorePausa() {
+            if (pausaState.active && pausaState.timeLeft > 0) {
+                modal.classList.add('show');
+                document.getElementById('modalIcon').textContent = pausaState.exerciseIcon;
+                document.getElementById('modalTitle').textContent = pausaState.exerciseName;
+                document.getElementById('modalDescription').textContent = pausaState.exerciseDesc;
+                
+                updateExerciseTimer();
+
+                if (exerciseTimer) clearInterval(exerciseTimer);
+                exerciseTimer = setInterval(() => {
+                    pausaState.timeLeft--;
+                    savePausaState();
+                    updateExerciseTimer();
+
+                    if (pausaState.timeLeft <= 0) {
+                        completeExercise();
+                    }
+                }, 1000);
+            }
+        }
+
         // Solicitar permissão de notificação
         if ('Notification' in window && Notification.permission === 'default') {
             Notification.requestPermission();
@@ -676,6 +723,7 @@
 
         // Inicializar
         updateStats();
+        restorePausa();
     </script>
 </body>
 </html>

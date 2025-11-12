@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FocusFlow - Configuração</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --azul-pro: #1e40af;
+            --laranja: #f97316;
+            --bg: #ffffff;
+            --text: #1f2937;
+            --card-bg: rgba(255, 255, 255, 0.7);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: stretch;
+        }
+
+        body.blocked {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--azul-pro);
+            text-decoration: none;
+        }
+
+        .logo span {
+            color: var(--laranja);
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-menu a {
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-menu a:hover, .nav-menu a.active {
+            color: var(--laranja);
+        }
+
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        .hamburger span {
+            width: 25px;
+            height: 3px;
+            background: var(--azul-pro);
+            transition: 0.3s;
+        }
+
+        .container {
+            margin-top: 100px;
+            padding: 2rem 5%;
+            max-width: 1000px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .page-header {
+            text-align: center;
+            color: white;
+            margin-bottom: 3rem;
+        }
+
+        .page-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .config-section {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        body.blocked .config-section {
+            background: rgba(30, 41, 59, 0.8);
+            color: white;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--azul-pro);
+            margin-bottom: 1.5rem;
+        }
+
+        body.blocked .section-title {
+            color: var(--laranja);
+        }
+
+        .form-group {
+            margin-bottom: 2rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.8rem;
+            font-size: 1.1rem;
+        }
+
+        .hours-input {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .hours-input input {
+            padding: 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: 'Poppins', sans-serif;
+            width: 120px;
+        }
+
+        body.blocked .hours-input input {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+        }
+
+        .day-checkbox {
+            display: none;
+        }
+
+        .day-label {
+            display: block;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.5);
+            border: 2px solid transparent;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        body.blocked .day-label {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .day-checkbox:checked + .day-label {
+            background: var(--laranja);
+            color: white;
+            border-color: var(--laranja);
+        }
+
+        .save-btn {
+            background: var(--laranja);
+            color: white;
+            padding: 1rem 3rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s;
+        }
+
+        .save-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .status-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2.5rem;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            margin-bottom: 2rem;
+        }
+
+        body.blocked .status-card {
+            background: rgba(30, 41, 59, 0.8);
+            color: white;
+        }
+
+        .status-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .status-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--azul-pro);
+            margin-bottom: 1rem;
+        }
+
+        body.blocked .status-title {
+            color: var(--laranja);
+        }
+
+        .status-message {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+        }
+
+        .time-display {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--laranja);
+            margin: 1rem 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 2rem 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--laranja), #fbbf24);
+            transition: width 0.5s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            padding: 0.8rem 2rem;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .pause-btn {
+            background: #fbbf24;
+            color: white;
+        }
+
+        .resume-btn {
+            background: #10b981;
+            color: white;
+        }
+
+        .override-btn {
+            background: #ef4444;
+            color: white;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .report-section {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        body.blocked .report-section {
+            background: rgba(30, 41, 59, 0.8);
+            color: white;
+        }
+
+        .week-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .day-stat {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        body.blocked .day-stat {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .day-stat-name {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .day-stat-hours {
+            font-size: 1.5rem;
+            color: var(--laranja);
+            font-weight: 700;
+        }
+
+        footer {
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 4rem;
+        }
+
+        @media (max-width: 768px) {
+            .nav-menu {
+                position: fixed;
+                top: 70px;
+                right: -100%;
+                flex-direction: column;
+                background: rgba(255, 255, 255, 0.98);
+                width: 100%;
+                padding: 2rem;
+                transition: right 0.3s;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            }
+
+            .nav-menu.active {
+                right: 0;
+            }
+
+            .hamburger {
+                display: flex;
+            }
+
+            .page-header h1 {
+                font-size: 2rem;
+            }
+
+            .days-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .control-buttons {
+                flex-direction: column;
+            }
+
+            .control-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html" class="logo">Focus<span>Flow</span></a>
+        <ul class="nav-menu" id="navMenu">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="modo-foco.html">Modo Foco</a></li>
+            <li><a href="tarefas.html">Tarefas</a></li>
+            <li><a href="pausas.html">Pausas</a></li>
+            <li><a href="configuracao.html" class="active">Configuração</a></li>
+        </ul>
+        <div class="hamburger" id="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <h1>⚙️ Configuração de Trabalho</h1>
+            <p>Defina limites saudáveis entre trabalho e descanso</p>
+        </div>
+
+        <div class="status-card" id="statusCard">
+            <div class="status-icon" id="statusIcon">⚙️</div>
+            <div class="status-title" id="statusTitle">Configure seu Horário</div>
+            <div class="status-message" id="statusMessage">
+                Defina quantas horas vai trabalhar por dia e em quais dias da semana
+            </div>
+            <div class="time-display" id="timeDisplay">00:00:00</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%">0%</div>
+            </div>
+            <div class="control-buttons">
+                <button class="control-btn pause-btn" id="pauseBtn" style="display: none;">⏸️ Pausar</button>
+                <button class="control-btn resume-btn" id="resumeBtn" style="display: none;">▶️ Retomar</button>
+                <button class="control-btn override-btn" id="overrideBtn" style="display: none;">Trabalhar Mais</button>
+            </div>
+        </div>
+
+        <div class="config-section">
+            <div class="section-title">⏰ Configuração de Trabalho</div>
+            
+            <div class="form-group">
+                <label>Horas de trabalho por dia:</label>
+                <div class="hours-input">
+                    <input type="number" id="workHours" min="1" max="12" value="8" placeholder="8">
+                    <span>horas</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Dias da semana que você trabalha:</label>
+                <div class="days-grid">
+                    <div>
+                        <input type="checkbox" id="day-1" class="day-checkbox" value="1">
+                        <label for="day-1" class="day-label">Segunda</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="day-2" class="day-checkbox" value="2">
+                        <label for="day-2" class="day-label">Terça</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="day-3" class="day-checkbox" value="3">
+                        <label for="day-3" class="day-label">Quarta</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="day-4" class="day-checkbox" value="4">
+                        <label for="day-4" class="day-label">Quinta</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="day-5" class="day-checkbox" value="5">
+                        <label for="day-5" class="day-label">Sexta</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="day-6" class="day-checkbox" value="6">
+                        <label for="day-6" class="day-label">Sábado</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="day-0" class="day-checkbox" value="0">
+                        <label for="day-0" class="day-label">Domingo</label>
+                    </div>
+                </div>
+            </div>
+
+            <button class="save-btn" id="saveBtn">Salvar Configurações</button>
+        </div>
+
+        <div class="report-section">
+            <div class="section-title">📊 Relatório Semanal de Equilíbrio</div>
+            <div class="week-stats" id="weekStats"></div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 FocusFlow. Equilíbrio é produtividade.</p>
+    </footer>
+
+    <script>
+        // Menu hamburger
+        const hamburger = document.getElementById('hamburger');
+        const navMenu = document.getElementById('navMenu');
+
+        hamburger.addEventListener('click', () => {
+            navMenu.classList.toggle('active');
+        });
+
+        document.querySelectorAll('.nav-menu a').forEach(link => {
+            link.addEventListener('click', () => {
+                navMenu.classList.remove('active');
+            });
+        });
+
+        // Sistema de configuração
+        let config = JSON.parse(localStorage.getItem('focusflow-balance-config')) || {
+            workHours: 8,
+            workDays: [1, 2, 3, 4, 5],
+            startTime: null,
+            workedSeconds: 0,
+            isPaused: false,
+            lastUpdate: new Date().toDateString()
+        };
+
+        let weekStats = JSON.parse(localStorage.getItem('focusflow-week-stats')) || {
+            0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0
+        };
+
+        let updateInterval = null;
+        let isOverridden = false;
+
+        function saveConfig() {
+            localStorage.setItem('focusflow-balance-config', JSON.stringify(config));
+        }
+
+        function saveWeekStats() {
+            localStorage.setItem('focusflow-week-stats', JSON.stringify(weekStats));
+        }
+
+        function loadConfig() {
+            document.getElementById('workHours').value = config.workHours;
+            
+            config.workDays.forEach(day => {
+                const checkbox = document.getElementById(`day-${day}`);
+                if (checkbox) checkbox.checked = true;
+            });
+
+            if (config.startTime && isTodayWorkDay() && !config.isPaused) {
+                startTracking();
+            }
+        }
+
+        function isTodayWorkDay() {
+            const today = new Date().getDay();
+            return config.workDays.includes(today);
+        }
+
+        function startTracking() {
+            if (!config.startTime) {
+                config.startTime = Date.now();
+                config.isPaused = false;
+                saveConfig();
+            }
+
+            updateStatus();
+            
+            if (updateInterval) clearInterval(updateInterval);
+            updateInterval = setInterval(() => {
+                if (!config.isPaused) {
+                    config.workedSeconds++;
+                    saveConfig();
+                    updateStatus();
+                }
+            }, 1000);
+        }
+
+        function pauseTracking() {
+            config.isPaused = true;
+            saveConfig();
+            updateStatus();
+        }
+
+        function resumeTracking() {
+            config.isPaused = false;
+            saveConfig();
+            updateStatus();
+        }
+
+        function stopTracking() {
+            if (updateInterval) {
+                clearInterval(updateInterval);
+                updateInterval = null;
+            }
+        }
+
+        function formatTime(seconds) {
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = seconds % 60;
+            return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+
+        function updateStatus() {
+            const statusIcon = document.getElementById('statusIcon');
+            const statusTitle = document.getElementById('statusTitle');
+            const statusMessage = document.getElementById('statusMessage');
+            const timeDisplay = document.getElementById('timeDisplay');
+            const progressFill = document.getElementById('progressFill');
+            const pauseBtn = document.getElementById('pauseBtn');
+            const resumeBtn = document.getElementById('resumeBtn');
+            const overrideBtn = document.getElementById('overrideBtn');
+
+            if (!isTodayWorkDay()) {
+                statusIcon.textContent = '🎉';
+                statusTitle.textContent = 'Dia de Descanso!';
+                statusMessage.textContent = 'Aproveite seu dia livre e recarregue as energias.';
+                timeDisplay.textContent = '00:00:00';
+                progressFill.style.width = '0%';
+                progressFill.textContent = 'Descanso';
+                pauseBtn.style.display = 'none';
+                resumeBtn.style.display = 'none';
+                overrideBtn.style.display = 'none';
+                document.body.classList.remove('blocked');
+                return;
+            }
+
+            timeDisplay.textContent = formatTime(config.workedSeconds);
+
+            const targetSeconds = config.workHours * 3600;
+            const progress = Math.min((config.workedSeconds / targetSeconds) * 100, 100);
+            progressFill.style.width = progress + '%';
+            progressFill.textContent = Math.floor(progress) + '%';
+
+            // Atualizar stats da semana
+            const today = new Date().getDay();
+            const hours = config.workedSeconds / 3600;
+            weekStats[today] = parseFloat(hours.toFixed(2));
+            saveWeekStats();
+            updateWeekReport();
+
+            if (config.isPaused) {
+                statusIcon.textContent = '⏸️';
+                statusTitle.textContent = 'Em Pausa';
+                statusMessage.textContent = 'Timer pausado. Clique em Retomar para continuar.';
+                pauseBtn.style.display = 'none';
+                resumeBtn.style.display = 'inline-block';
+                document.body.classList.remove('blocked');
+            } else if (config.workedSeconds >= targetSeconds && !isOverridden) {
+                statusIcon.textContent = '🛑';
+                statusTitle.textContent = 'Hora de Descansar!';
+                statusMessage.textContent = `Você já trabalhou ${config.workHours} horas hoje. É hora de desligar!`;
+                pauseBtn.style.display = 'none';
+                resumeBtn.style.display = 'none';
+                overrideBtn.style.display = 'inline-block';
+                document.body.classList.add('blocked');
+                stopTracking();
+
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    new Notification('FocusFlow - Hora de Parar! 🌙', {
+                        body: `Você completou suas ${config.workHours} horas de trabalho hoje!`,
+                        icon: '🌙'
+                    });
+                }
+            } else if (config.workedSeconds < targetSeconds) {
+                statusIcon.textContent = '✅';
+                statusTitle.textContent = 'Trabalhando...';
+                const remaining = targetSeconds - config.workedSeconds;
+                statusMessage.textContent = `Faltam ${formatTime(remaining)} para completar seu dia.`;
+                pauseBtn.style.display = 'inline-block';
+                resumeBtn.style.display = 'none';
+                overrideBtn.style.display = 'none';
+                document.body.classList.remove('blocked');
+            }
+        }
+
+        function updateWeekReport() {
+            const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+            const statsHtml = dayNames.map((name, index) => {
+                const hours = weekStats[index] || 0;
+                const isWorkDay = config.workDays.includes(index);
+                return `
+                    <div class="day-stat" style="${!isWorkDay ? 'opacity: 0.5;' : ''}">
+                        <div class="day-stat-name">${name}</div>
+                        <div class="day-stat-hours">${hours.toFixed(2)}h</div>
+                    </div>
+                `;
+            }).join('');
+            
+            document.getElementById('weekStats').innerHTML = statsHtml;
+        }
+
+        // Event listeners
+        document.getElementById('saveBtn').addEventListener('click', () => {
+            const hours = parseInt(document.getElementById('workHours').value);
+            const selectedDays = [];
+            
+            document.querySelectorAll('.day-checkbox:checked').forEach(cb => {
+                selectedDays.push(parseInt(cb.value));
+            });
+
+            if (selectedDays.length === 0) {
+                alert('Selecione pelo menos um dia da semana!');
+                return;
+            }
+
+            config.workHours = hours;
+            config.workDays = selectedDays;
+            
+            if (isTodayWorkDay() && !config.startTime) {
+                startTracking();
+            }
+            
+            saveConfig();
+            updateStatus();
+            alert('Configurações salvas com sucesso!');
+        });
+
+        document.getElementById('pauseBtn').addEventListener('click', pauseTracking);
+        document.getElementById('resumeBtn').addEventListener('click', resumeTracking);
+
+        document.getElementById('overrideBtn').addEventListener('click', () => {
+            if (confirm('Tem certeza que deseja continuar trabalhando além do seu limite saudável?')) {
+                isOverridden = true;
+                config.isPaused = false;
+                startTracking();
+                updateStatus();
+            }
+        });
+
+        // Resetar no início de cada dia
+        function checkNewDay() {
+            const today = new Date().toDateString();
+
+            if (config.lastUpdate !== today) {
+                config.workedSeconds = 0;
+                config.startTime = null;
+                config.isPaused = false;
+                config.lastUpdate = today;
+                isOverridden = false;
+                saveConfig();
+                updateStatus();
+            }
+        }
+
+        // Solicitar permissão de notificação
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+
+        // Inicializar
+        checkNewDay();
+        loadConfig();
+        updateStatus();
+        updateWeekReport();
+
+        // Verificar novo dia a cada minuto
+        setInterval(checkNewDay, 60000);
+    </script>
+</body>
+</html>
